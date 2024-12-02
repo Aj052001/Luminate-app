@@ -552,75 +552,75 @@ const Audio = mongoose.model("Audio", audioSchema);
 
 
 
-app.post("/api/saveAudio", auth, async (req, res) => {
-  const { postExperience } = req.body;
-
-  // Validate required fields
-  if (!postExperience) {
-      return res.status(400).json({ message: "All fields are required." });
-  }
-
-  try {
-      // Call to OpenAI's API to summarize the postExperience
-      const apiResponse = await axios.post('https://api.openai.com/v1/engines/davinci/completions', {
-          prompt: postExperience,
-          max_tokens: 100,  // Adjust token limit based on your needs
-          temperature: 0.5,  // Adjust based on the desired creativity of the summary
-      }, {
-          headers: {
-              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json'
-          }
-      });
-
-      // Check if the API call was successful
-      if (!apiResponse.data.choices.length) {
-          throw new Error("Failed to generate summary");
-      }
-
-      // Extract the summary text
-      const summary = apiResponse.data.choices[0].text.trim();
-
-      // Create a new Audio entry with the summarized text
-      const newAudio = new Audio({
-          email: req.user.email,  // Extracted from the authenticated user
-          audio: summary,  // Use the summarized text as 'audio'
-      });
-
-      // Save the new audio entry to the database
-      await newAudio.save();
-
-      res.status(201).json({ message: "Audio entry saved successfully!", data: newAudio });
-  } catch (error) {
-      console.error("Error saving audio entry:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
-  }
-});
 // app.post("/api/saveAudio", auth, async (req, res) => {
-//   try {
-//     // Extract the postExperience from the body directly
-//     const { postExperience } = req.body;  // Access directly from the body (not journalEntry.postExperience)
+//   const { postExperience } = req.body;
 
-//     // Validate required fields
-//     if (!postExperience) {
+//   // Validate required fields
+//   if (!postExperience) {
 //       return res.status(400).json({ message: "All fields are required." });
-//     }
+//   }
 
-//     // Create a new Audio entry
-//     const newAudio = new Audio({
-//       email: req.user.email,  // Extracted from the authenticated user (via auth middleware)
-//       audio: postExperience,  // Save the postExperience as 'audio'
-//     });
+//   try {
+//       // Call to OpenAI's API to summarize the postExperience
+//       const apiResponse = await axios.post('https://api.openai.com/v1/engines/davinci/completions', {
+//           prompt: postExperience,
+//           max_tokens: 100,  // Adjust token limit based on your needs
+//           temperature: 0.5,  // Adjust based on the desired creativity of the summary
+//       }, {
+//           headers: {
+//               'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+//               'Content-Type': 'application/json'
+//           }
+//       });
 
-//     // Save the journal entry to the database
-//     await newAudio.save();
+//       // Check if the API call was successful
+//       if (!apiResponse.data.choices.length) {
+//           throw new Error("Failed to generate summary");
+//       }
 
-//     res.status(201).json({ message: "Audio entry saved successfully!", data: newAudio });
+//       // Extract the summary text
+//       const summary = apiResponse.data.choices[0].text.trim();
+
+//       // Create a new Audio entry with the summarized text
+//       const newAudio = new Audio({
+//           email: req.user.email,  // Extracted from the authenticated user
+//           audio: summary,  // Use the summarized text as 'audio'
+//       });
+
+//       // Save the new audio entry to the database
+//       await newAudio.save();
+
+//       res.status(201).json({ message: "Audio entry saved successfully!", data: newAudio });
 //   } catch (error) {
-//     console.error("Error saving audio entry:", error);
-//     res.status(500).json({ message: "Internal server error" });
+//       console.error("Error saving audio entry:", error);
+//       res.status(500).json({ message: "Internal server error", error: error.message });
 //   }
 // });
+app.post("/api/saveAudio", auth, async (req, res) => {
+  try {
+    // Extract the postExperience from the body directly
+    const { postExperience } = req.body;  // Access directly from the body (not journalEntry.postExperience)
+
+    // Validate required fields
+    if (!postExperience) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    // Create a new Audio entry
+    const newAudio = new Audio({
+      email: req.user.email,  // Extracted from the authenticated user (via auth middleware)
+      audio: postExperience,  // Save the postExperience as 'audio'
+    });
+
+    // Save the journal entry to the database
+    await newAudio.save();
+
+    res.status(201).json({ message: "Audio entry saved successfully!", data: newAudio });
+  } catch (error) {
+    console.error("Error saving audio entry:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
 
