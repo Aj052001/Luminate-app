@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "./UserContext.js"; // Adjust the path
 import OnboardingScreen from "./OnboardingScreen.tsx";
+import JournalScreen from "./journal-screen-updated.tsx";
 
 const AuthForms = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -54,7 +55,10 @@ const AuthForms = () => {
   };
 
   // Redirect to onboarding screen if authenticated
-  if (authData.isAuthenticated) {
+  if (authData.isAuthenticated && isLogin) {
+      return <JournalScreen/>
+  }
+  else if( authData.isAuthenticated && !isLogin){
     return <OnboardingScreen />;
   }
 
@@ -154,3 +158,4 @@ const AuthForms = () => {
 };
 
 export default AuthForms;
+

@@ -29,10 +29,13 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!localStorage.getItem('userToken'),
   });
 
+
+
   // Login Function
-  const login = (email, token) => {
+  const login = (email, token,isFirstLogin) => {
     localStorage.setItem('userEmail', email); // Store email in localStorage
-    localStorage.setItem('userToken', token); // Store token in localStorage
+    localStorage.setItem('userToken', token); 
+    // Store token in localStorage
     setAuthData({ email, token, isAuthenticated: true }); // Update context
   };
 

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const MuscleSelector = () => {
   const navigate = useNavigate();
   const [selectedMuscles, setSelectedMuscles] = useState(new Set());
-  const [setMessage] = useState('');
+  const [message, setMessage] = useState('');
   const { authData } = useAuth();
   const MuscleType = {
     CHEST: 'CHEST',

@@ -127,7 +127,7 @@ const JournalScreen = () => {
         setExperienceDate("");
         
         setShowRoadmap(true); // Flag to show the roadmap or move to next page
-        navigate('/'); // Navigate to another screen (e.g., journal screen)
+        navigate('/intension'); // Navigate to another screen (e.g., journal screen)
       } else {
         alert(data?.message || "An unexpected error occurred. Please try again.");
       }

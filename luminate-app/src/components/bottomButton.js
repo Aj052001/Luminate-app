@@ -1,21 +1,35 @@
 import React from 'react';
 
 import { useNavigate } from 'react-router-dom';
-
+import { useAuth } from './UserContext';
 
 const BottomButton = () => {
+  const { authData } = useAuth();
+   
+  const { isAuthenticated} = authData; 
     const navigate = useNavigate();
     function goToMentalStateSelector() {
         // Navigate to the MentalStateSelector page
-        navigate('/intension');
+        if(isAuthenticated)
+        {
+          navigate('/intension');
+        }
       }
     function goToResource() {
         // Navigate to the MentalStateSelector page
-        navigate('/resource');
+        if(isAuthenticated)
+          {
+            navigate('/resource');
+          }
+        
       }
     function goToExperience() {
         // Navigate to the MentalStateSelector page
-        navigate('/postExperience');
+        if(isAuthenticated)
+          {
+            navigate('/postExperience');
+          }
+        
       }
     
    return(
