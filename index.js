@@ -6,7 +6,76 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const path = require("path");
+const axios = require('axios');
+const { OpenAIApi } = require("openai");
+const readline = require("readline");
 const { type } = require("os");
+
+
+const API_KEY = process.env.OPENAI_API_KEY;
+
+// Initialize conversation history
+let conversationHistory = [
+  {
+      role: "system",
+      content: `You are a professional medical summarization assistant. Your role is to summarize user-provided experiences into concise, clear, and medically relevant summaries. The summaries should focus on key symptoms, emotions, behaviors, and any notable medical or psychological details mentioned by the user.
+
+Guidelines:
+1. Extract the most important details from the text and organize them in a coherent, logical order.
+2. Avoid including unnecessary conversational details or filler words.
+3. If the text contains medical or psychological terminology, ensure accurate and professional phrasing.
+4. Structure the summary in a way that is easy for healthcare professionals to understand.
+5. Keep the summary under [desired word limit, e.g., 100 words], unless the input text requires more detail to be precise.
+6. Provide a professional tone and avoid speculation or assumptions beyond what is stated.
+
+Example Input:
+"I've been feeling really anxious lately. My heart races when I think about work, and I've been getting these headaches almost every day. I tried sleeping more, but it doesn't seem to help much. I also feel like my appetite is gone, and I just don't enjoy eating anymore. I don't know what's wrong."
+
+Example Summary:
+"The user reports experiencing persistent anxiety with symptoms including racing heart, daily headaches, reduced appetite, and loss of enjoyment in eating. Sleep adjustments have not alleviated these symptoms. The user is seeking insight into potential causes.`,
+  },
+];
+
+
+
+async function chatWithGPT(prompt) {
+  try {
+      // Add user input to conversation history
+      conversationHistory.push({ role: "user", content: prompt });
+
+      // Send request to OpenAI API
+      const response = await axios.post(
+          "https://api.openai.com/v1/chat/completions",
+          {
+              model: "gpt-4o-mini", // Adjust the model as needed
+              messages: conversationHistory,
+          },
+          {
+              headers: {
+                  Authorization: `Bearer ${API_KEY}`, // Ensure your API key is securely set
+                  "Content-Type": "application/json",
+              },
+          }
+      );
+
+      // Extract assistant's response
+      const assistantResponse = response.data.choices[0].message.content;
+
+      // Add assistant response to conversation history
+      conversationHistory.push({ role: "assistant", content: assistantResponse });
+
+      return assistantResponse;
+  } catch (error) {
+      // Handle errors gracefully
+      console.error("Error with OpenAI API:", error.response?.data || error.message);
+
+      // Return an error message for the user
+      return "I'm sorry, but there was an error processing your request. Please try again.";
+  }
+}
+
+
+
 // Database Connection
 const connectDB = async () => {
   try {
@@ -102,7 +171,6 @@ const errorHandler = (err, req, res, next) => {
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 // Connect to MongoDB
 connectDB();
 
@@ -501,6 +569,8 @@ app.post("/api/savePostExperience", auth, async (req, res) => {
       postExperience,
     } = req.body.journalEntry;
 
+
+
     // Validate required fields
     if (
       !postExperience
@@ -508,11 +578,14 @@ app.post("/api/savePostExperience", auth, async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    const response = await chatWithGPT(postExperience);
+    console.log("GPT:", response);
+
     
     // Create a new journal entry
     const newJournal = new PostExperience({
       email: req.user.email, // Extracted from authenticated user (via auth middleware)
-      postExperience,
+      postExperience:response,
     });
 
     // Save the journal entry to the database
@@ -547,60 +620,13 @@ const audioSchema = new mongoose.Schema({
 
 const Audio = mongoose.model("Audio", audioSchema);
 
-
-
-
-
-
-// app.post("/api/saveAudio", auth, async (req, res) => {
-//   const { postExperience } = req.body;
-
-//   // Validate required fields
-//   if (!postExperience) {
-//       return res.status(400).json({ message: "All fields are required." });
-//   }
-
-//   try {
-//       // Call to OpenAI's API to summarize the postExperience
-//       const apiResponse = await axios.post('https://api.openai.com/v1/engines/davinci/completions', {
-//           prompt: postExperience,
-//           max_tokens: 100,  // Adjust token limit based on your needs
-//           temperature: 0.5,  // Adjust based on the desired creativity of the summary
-//       }, {
-//           headers: {
-//               'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-//               'Content-Type': 'application/json'
-//           }
-//       });
-
-//       // Check if the API call was successful
-//       if (!apiResponse.data.choices.length) {
-//           throw new Error("Failed to generate summary");
-//       }
-
-//       // Extract the summary text
-//       const summary = apiResponse.data.choices[0].text.trim();
-
-//       // Create a new Audio entry with the summarized text
-//       const newAudio = new Audio({
-//           email: req.user.email,  // Extracted from the authenticated user
-//           audio: summary,  // Use the summarized text as 'audio'
-//       });
-
-//       // Save the new audio entry to the database
-//       await newAudio.save();
-
-//       res.status(201).json({ message: "Audio entry saved successfully!", data: newAudio });
-//   } catch (error) {
-//       console.error("Error saving audio entry:", error);
-//       res.status(500).json({ message: "Internal server error", error: error.message });
-//   }
-// });
 app.post("/api/saveAudio", auth, async (req, res) => {
   try {
     // Extract the postExperience from the body directly
     const { postExperience } = req.body;  // Access directly from the body (not journalEntry.postExperience)
 
+    const response = await chatWithGPT(postExperience);
+    console.log("GPT:", response);
     // Validate required fields
     if (!postExperience) {
       return res.status(400).json({ message: "All fields are required." });
@@ -609,7 +635,7 @@ app.post("/api/saveAudio", auth, async (req, res) => {
     // Create a new Audio entry
     const newAudio = new Audio({
       email: req.user.email,  // Extracted from the authenticated user (via auth middleware)
-      audio: postExperience,  // Save the postExperience as 'audio'
+      audio: response,  // Save the postExperience as 'audio'
     });
 
     // Save the journal entry to the database
@@ -621,9 +647,6 @@ app.post("/api/saveAudio", auth, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
-
-
 
 
 
@@ -644,7 +667,8 @@ app.post("/api/profile", auth, async (req, res) => {
     // Fetch the last onboarding question
     const onboardingQuestion = await OnboardingQuestion.findOne({ email })
       .sort({ createdAt: -1 }); // Sort by 'createdAt' in descending order
-
+      
+      
     // Fetch additional data from other collections
     const journals = await Journal.findOne({ email }).sort({ createdAt: -1 });
     const muscleSelections = await MuscleSelection.findOne({ email }).sort({ createdAt: -1 });
@@ -652,15 +676,28 @@ app.post("/api/profile", auth, async (req, res) => {
     const postExperiences = await PostExperience.findOne({ email }).sort({ createdAt: -1 });
     const audios = await Audio.findOne({ email }).sort({ createdAt: -1 });
 
+
+    const muscleSelectionsAll = await MuscleSelection.find({ email });
+    const journeysAll = await Journey.findOne({ email });
+    const postExperiencesAll = await PostExperience.find({ email });
+    const audiosAll = await Audio.find({ email });
+    const journalAllData = await Journal.find({ email });
+    const dates = journalAllData.map((journal) => journal.experienceDate);
     // Aggregate all data
     const profileData = {
       user,
+      dates,
+      journalAllData,
       onboardingQuestion, // Last document
       journals,
       muscleSelections,
       journeys,
       postExperiences,
-      audios
+      audios,
+      muscleSelectionsAll,
+      journeysAll,
+      postExperiencesAll,
+      audiosAll
     };
 
     res.status(200).json({
@@ -672,9 +709,6 @@ app.post("/api/profile", auth, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
-
-
 
 
 // ....................deployment..................

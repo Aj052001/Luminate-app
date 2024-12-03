@@ -59,7 +59,7 @@ const NavigationBar = () => {
                     className="flex-shrink-0 text-purple-300 text-2xl font-bold absolute top-0 left-0 m-4 cursor-pointer" 
                     onClick={goToHome}
                 >
-                    Luminate
+                   
                 </div>
                 
                 {/* User Profile Icon */}
