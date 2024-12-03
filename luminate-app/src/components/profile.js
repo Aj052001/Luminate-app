@@ -31,21 +31,17 @@ const UserProfile = () => {
         (item) => item.experienceDate === selectedDate
       );
       setJournalData(filteredData1);
-
-      // const filteredData2 = profileData.journeysAll.filter(item => item.experienceDate === selectedDate);
-      // setJourneyData(filteredData2);
-
-
-      // const filteredData2 = profileData.journeysAll.filter((item) => {
-      //   // Extract the date part from createdAt
-      //   const createdAtDate = new Date(item.createdAt)
-      //     .toISOString()
-      //     .split("T")[0];
-      //   // Compare it with the selected date
-      //   return createdAtDate === selectedDate;
-      // });
-      // setMuscleData(filteredData2);
-
+       
+            //  console.log(profileData.journeysAll)
+      const filteredData2 = profileData.journeysAll.filter((item) => {
+        // Extract the date part from createdAt
+        const createdAtDate = new Date(item.createdAt)
+          .toISOString()
+          .split("T")[0];
+        // Compare it with the selected date
+        return createdAtDate === selectedDate;
+      });
+      setJourneyData(filteredData2);
 
       const filteredData3 = profileData.muscleSelectionsAll.filter((item) => {
         // Extract the date part from createdAt
@@ -165,8 +161,10 @@ const UserProfile = () => {
   const renderSection = (title, content) => (
     <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-8">
       <h2 className="text-2xl font-bold text-purple-400 mb-4">{title}</h2>
-      {content.length > 0 ? (
+      {content?.length > 0 ? (
+       
         content.map((item, index) => (
+          
           <div key={index} className="mb-4">
             {item}
           </div>
@@ -194,24 +192,28 @@ const UserProfile = () => {
         )
       : null;
 
+
+
+      
   const renderJourneys = () =>
     profileData.journeys
-      ? renderSection(
-          "Journeys",
-          profileData.journeys.levels.map((level, idx) => (
-            <div key={idx} className="text-gray-300 space-y-2">
-              <h3 className="text-purple-300 font-semibold">{level.title}</h3>
-              {level.questionAnswers.map((qa, i) => (
-                <p key={i} className="space-y-1">
-                  <strong>Q:</strong> {qa.question} <br />
-                  <strong>A:</strong> {qa.answer}
-                </p>
-              ))}
-            </div>
-          ))
-        )
-      : null;
-
+      ? 
+      renderSection(
+        "Journeys",
+        profileData.journeys?.levels?.map((level, idx) => (
+          <div key={idx} className="text-gray-300 space-y-2">
+            <h3 className="text-purple-300 font-semibold">{level.title}</h3>
+            {level?.questionAnswers?.map((qa, i) => (
+              <p key={i} className="space-y-1">
+                <strong>Q:</strong> {qa.question} <br />
+                <strong>A:</strong> {qa.answer}
+              </p>
+            ))}
+          </div>
+        ))
+     
+      )
+      :  null;
   
 
   const renderMuscleSelections = () =>

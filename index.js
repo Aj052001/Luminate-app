@@ -678,7 +678,7 @@ app.post("/api/profile", auth, async (req, res) => {
 
 
     const muscleSelectionsAll = await MuscleSelection.find({ email });
-    const journeysAll = await Journey.findOne({ email });
+    const journeysAll = await Journey.find({ email });
     const postExperiencesAll = await PostExperience.find({ email });
     const audiosAll = await Audio.find({ email });
     const journalAllData = await Journal.find({ email });
